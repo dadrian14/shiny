@@ -2,7 +2,7 @@
 This repository contains the code for R Shiny apps I have created, mostly for the purpose of teaching and learning statistics.  Currently, the web apps are only accessible within the GVSU network, so sharing the code is the only way I have of sharing them outside the university.  I have organized them as follows.
 
 ## steps
-This is a tool for introducing coding your own apps.  It contains step-by-step instructions for making a simple app that plots the normal density curve.  The instructions are an R Markdown file that contains several Shiny apps (code and web apps) at the different stages of development.
+This is a tool for starting to learn coding your own apps.  It contains step-by-step instructions for making a simple app that plots the normal density curve.  The instructions are an R Markdown file that contains several Shiny apps (code and web apps) at the different stages of development.
 
 ## introstats
 This folder contains several apps that are designed for an introductory course in applied statistics.  These apps include:
