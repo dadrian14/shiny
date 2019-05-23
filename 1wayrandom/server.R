@@ -74,6 +74,6 @@ shinyServer(function(input, output) {
      }
    })
    output$theo_corr_rand <- renderText({
-     round(input$sigT^2 / (input$sigT^2 + input$sig_ran), 4)
+     round(input$sigT^2 / (input$sigT^2 + input$sig_ran^2), 4)
    })
 })
