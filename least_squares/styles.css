@@ -1,0 +1,59 @@
+hr{
+    border-style: solid;
+    border-color: black;
+}
+ul, ol{
+    padding-left: 15px;
+}
+h3, h4{
+	margin-top: 0px;
+	margin-bottom: 5px;
+}
+table, th, td {
+    border: 1px solid black;
+}
+th, td{
+	padding: 2px;
+	text-align: center;
+}
+th{
+	font-style: bold;
+}
+.well{
+	margin: 5px 5px 5px 5px;
+	padding: 15px;
+}
+.row{
+	padding: 0px;
+	margin: 0px;
+}
+.col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, 
+	.col-sm-10{
+	padding: 0px;
+	margin: 0px;
+}
+.container-fluid{
+	padding: 0px 0px 0px 0px; /* top right bottom left */
+	margin:0px;
+}
+.navbar-header{
+	margin: 0px;
+}
+.tab-pane{
+	padding: 0px;
+	margin: 0px;
+}
+.tab-content{
+	padding: 0px;
+	margin: 0px;
+}
+div.checkbox{
+	margin: 0px;
+}
+nav.navbar{
+	padding-left: 15px;
+	margin-bottom: 0px;
+}
+#myScrollBox{
+	overflow-x: auto;
+}

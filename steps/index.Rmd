@@ -1,0 +1,484 @@
+---
+title: "Step by step normal app"
+output: 
+  html_document:
+    highlight: monochrome
+runtime: shiny
+---
+## Introduction
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+My goal in this tutorial is to provide an accessible entry point for beginning R coders who want to  start to creating Shiny apps.  This example app creates a plot of the normal density curve that reacts to user manipulation of sliders that control the mean and standard deviation of the distribution.  Several of the ideas here are based on the excellent [How To Start Shiny Tutorial](https://shiny.rstudio.com/tutorial/) from RStudio.  If you already know how to code in R, I think this is an excellent place to start; it's where I started, anyway!
+
+I've used a step-by-step approach, sequentially adding code that builds upon the previous steps.  I show the code and the app at each step and comment the changes in each.  To overview, the steps are:
+
+1. [The template](#section-the-template) A blank slate where you can start every app which shows the two fundamental parts of Shiny apps.
+2. [A sample layout](#section-a-sample-layout) A basic organizational layout for app with a title, a sidebar for inputs, and a larger area for outputs.
+3. [Add sliders](#section-add-sliders-for-the-mean-and-standard-deviation) Adds sliders that control the mean and standard deviation.
+4. [Add space for the plot](#section-add-space-for-the-plot) Adds space for the plot of the normal density in the app and a place for adding R code to create it.
+5. [Creating the plot](#section-add-normal-curve) Adds R code to create the plot of the normal density.
+6. [Refines the app](#section-refining-the-appearance-of-the-app) Adds a few features for proper performance of the app.
+7. [Adds optional content](#section-adding-optional-content-with-a-check-box) Adds a checkbox that optionally displays lines corresponding to 1, 2, and 3 standard deviations from the mean of the normal distribution on the plot.
+
+This brings us to our starting point: the template, a set of code that you can use to start every Shiny app you create.
+
+----------
+
+## The Template
+
+|| [Top](#section-introduction) || [1. Template](#section-the-template) || [2. Layout](#section-a-sample-layout) || [3. Sliders](#section-add-sliders-for-the-mean-and-standard-deviation) ||
+[4. Space for Plot](#section-add-space-for-the-plot) || [5. Reactive plot](#section-add-normal-curve) || [6. Refining](#section-refining-the-appearance-of-the-app) ||
+[7. Optional content](#section-adding-optional-content-with-a-check-box) ||
+
+
+
+Every Shiny app I make starts like this.  (If you want to try running this for yourself, you can copy this into an R script in RStudio.)
+
+<pre>
+library(shiny)
+ui <- fluidPage(
+
+)
+
+server <- function(input, output) {
+
+}
+
+shinyApp(ui = ui, server = server)
+</pre>
+
+I will focus on two parts of this code, which correspond to the two major processes of the app.
+
+* The `ui` part, which stands for user interface, is where you put what will be displayed to the user in the app page.  In our app, we will display the sliders controlling the mean and standard deviation and a plot of the normal density with the current mean and standard deviation.
+* The `server` part is where you put what the R server will do the update what is displayed on the app according to changes in the user inputs.  In this case, the server will create the plot of the normal density and update it whenever the sliders for the mean and standard deviation change.
+
+Save the code in the file `app.R`.  (Another approach is to make separate files containing the `ui` and `server` functions, but we won't do this to keep all the code together.)  The app will run, but it won't show anything because we haven't added anything to it yet!
+
+----------
+
+## A Sample Layout
+
+|| [Top](#section-introduction) || [1. Template](#section-the-template) || [2. Layout](#section-a-sample-layout) || [3. Sliders](#section-add-sliders-for-the-mean-and-standard-deviation) ||
+[4. Space for Plot](#section-add-space-for-the-plot) || [5. Reactive plot](#section-add-normal-curve) || [6. Refining](#section-refining-the-appearance-of-the-app) ||
+[7. Optional content](#section-adding-optional-content-with-a-check-box) ||
+
+Let's start by adding a layout, a basis for what we'll add later.  What I have here is similar to what the function `sidebarLayout` provides but provides a few more details to suggest some ideas for customization.  Note first that everything we have added is in the `ui` function, as it all refers to what the user will see; further, this is static content so we don't require any work from the R server yet.  The resulting app is shown below the code.
+
+<pre>
+library(shiny)
+ui <- fluidPage(
+  <b><span style="color:blue">wellPanel(h2('Title')),
+  fluidRow(
+    column(4, wellPanel(
+      'Inputs: sliders'
+    )),
+    column(8, wellPanel(
+      'Outputs: Plot of normal curve'
+    ))
+  )</span></b>
+)
+
+server <- function(input, output) {
+
+}
+
+shinyApp(ui = ui, server = server)
+</pre>
+
+
+```{r, echo=F}
+library(shiny)
+ui <- fluidPage(
+  wellPanel(h2('Title')),
+  fluidRow(
+    column(4, wellPanel(
+      'Inputs: sliders'
+    )),
+    column(8, wellPanel(
+      'Outputs: Plot of normal curve'
+    ))
+  )
+)
+
+server <- function(input, output) {
+
+}
+
+shinyApp(ui = ui, server = server, options=list(height=205))
+```
+The functions I have used include:
+
+* `wellPanel` Provides gray rectangular panels to group the contents of your app
+* `h2` Makes the title appear larger.  Other options are `h1`, `h2`, `h3`, through `h6`, with `h1` making the largest text and smaller text from `h2` downwards.  Note: This is an example of a "tag" in the HTML language (used to make websites).  Shiny is built in with many tags, as your app will be created in HTML.  Another example is `strong`, which makes bold text.  For a complete list, see [here](https://shiny.rstudio.com/articles/tag-glossary.html).  (An interesting aspect of Shiny apps is that they offer a glimpse into HTML and website creation for the uninitiated -- like myself!)
+* `fluidRow` Creates a row of content.  You can structure your app into rows divided into columns.
+* `column` Divides the width of the row of the app into columns.  The numbers 4 and 8 control the width of the columns.  These must be whole numbers where the entire width is represented by 12.
+
+Coding tip: note that elements of `ui` are separated by commas.
+
+----------
+
+## Add sliders for the mean and standard deviation
+
+|| [Top](#section-introduction) || [1. Template](#section-the-template) || [2. Layout](#section-a-sample-layout) || [3. Sliders](#section-add-sliders-for-the-mean-and-standard-deviation) ||
+[4. Space for Plot](#section-add-space-for-the-plot) || [5. Reactive plot](#section-add-normal-curve) || [6. Refining](#section-refining-the-appearance-of-the-app) ||
+[7. Optional content](#section-adding-optional-content-with-a-check-box) ||
+
+
+Next, let's add the sliders that control the mean and standard deviation of the normal distribution.
+
+<pre>
+library(shiny)
+ui <- fluidPage(
+  wellPanel(h2('Title')),
+  fluidRow(
+    column(4, wellPanel(
+      <b><span style='color:blue'>sliderInput(inputId='mu', label='Mean', min=0, max=10, value=3, step=.1),
+      sliderInput(inputId='sigma', label='Standard Deviation', min=1, 4, value=2, step=.05)</span></b>
+    )),
+    column(8, wellPanel(
+      'Outputs: Plot of normal curve'
+    ))
+  )
+)
+
+server <- function(input, output) {
+
+}
+
+shinyApp(ui = ui, server = server)
+</pre>
+
+```{r, echo=F}
+library(shiny)
+ui <- fluidPage(
+  wellPanel(h2('Title')),
+  fluidRow(
+    column(4, wellPanel(
+        sliderInput(inputId='mu', label='Mean', min=0, max=10, value=3, step=.1),
+        sliderInput(inputId='sigma', label='Standard Deviation', min=1, 4, value=2, step=.05)
+    )),
+    column(8, wellPanel(
+      'Outputs: Plot of normal curve'
+    ))
+  )
+)
+
+server <- function(input, output) {
+
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+This is accomplished with the function `sliderInput`.  Its arguments include:
+
+* `inputId` We will use this later to refer to the value of the sliders when we create the plot in the `server` function based on their value.
+* `label` Label above the slider
+* `min` and `max` Minimum and maximum values that the sliders will take on
+* `value` Initial value of the slider when the app loads
+* `step` Space between possible values of the slider.  (Try moving the sliders!)
+
+The app could have been set up to input the values of the mean and standard deviation using different methods than sliders.  For instance, the user could type in the number with the function `numericInput` or select from a list of possible values with `radioButtons`.  You can view a gallery of the most common input elements (and their associated code) [here](https://shiny.rstudio.com/gallery/widget-gallery.html).
+
+----------
+
+## Add Space for the Plot
+
+|| [Top](#section-introduction) || [1. Template](#section-the-template) || [2. Layout](#section-a-sample-layout) || [3. Sliders](#section-add-sliders-for-the-mean-and-standard-deviation) ||
+[4. Space for Plot](#section-add-space-for-the-plot) || [5. Reactive plot](#section-add-normal-curve) || [6. Refining](#section-refining-the-appearance-of-the-app) ||
+[7. Optional content](#section-adding-optional-content-with-a-check-box) ||
+
+Our next task is to create the plot of the normal density for the values of the mean and standard deviation given by the sliders.  First, we will create the structure on the UI and server sides that allows for the plot to be shown and updated within R, respectively.  That is,
+
+* UI side: The function `plotOutput` sets aside the space in the right panel for the plot to be added.
+* Server side: The function `renderPlot` takes the plot created in R and "renders" it suitable for display on the webpage.  (There is no `R` code within `renderPlot` yet so no plot is created yet.)
+
+Note that the output ID `normaldist` is matched in both the server-side code `output$normaldist` and the UI-side code `outputId='normaldist'`.
+
+<pre>
+library(shiny)
+ui <- fluidPage(
+  wellPanel(h2('Title')),
+  fluidRow(
+    column(4, wellPanel(
+      sliderInput(inputId='mu', label='Mean', min=0, max=10, value=3, step=.1),
+      sliderInput(inputId='sigma', label='Standard Deviation', min=1, 4, value=2, step=.1)
+    )),
+    column(8, wellPanel(
+      <b><span style='color:blue'>plotOutput(outputId='normaldist')</b></span>
+    ))
+  )
+)
+
+server <- function(input, output) {
+  <b><span style='color:blue'>output$normaldist <- renderPlot({
+
+  })</b></span>
+}
+
+shinyApp(ui = ui, server = server)
+</pre>
+
+```{r echo=F}
+library(shiny)
+ui <- fluidPage(
+  wellPanel(h2('Title')),
+  fluidRow(
+    column(4, wellPanel(
+      sliderInput(inputId='mu', label='Mean', min=0, max=10, value=3, step=.1),
+      sliderInput(inputId='sigma', label='Standard Deviation', min=1, 4, value=2, step=.1)
+    )),
+    column(8, wellPanel(
+      plotOutput(outputId='normaldist')
+    ))
+  )
+)
+
+server <- function(input, output) {
+  output$normaldist <- renderPlot({
+
+  })
+}
+
+shinyApp(ui = ui, server = server, options=list(height=590))
+```
+
+As shown in this [lesson](https://shiny.rstudio.com/tutorial/written-tutorial/lesson4/) from RStudio, there are several pairs of `*Output` and `render*` functions that are useful in displaying different kinds of reactive output to the app.  The list includes:
+
+`*Output` function   | `render*` function | Displays
+---------------------|--------------------|----------
+`plotOutput`         | `renderPlot`       | Plot
+`dataTableOutput`    | `renderDataTable`  | Data Table
+`textOutput`         | `renderText`       | Text
+`verbatimTextOutput` | `renderPrint`      | R console text
+`uiOutput`           | `renderUI`         | HTML objects
+
+---------------
+
+## Add normal curve
+
+|| [Top](#section-introduction) || [1. Template](#section-the-template) || [2. Layout](#section-a-sample-layout) || [3. Sliders](#section-add-sliders-for-the-mean-and-standard-deviation) ||
+[4. Space for Plot](#section-add-space-for-the-plot) || [5. Reactive plot](#section-add-normal-curve) || [6. Refining](#section-refining-the-appearance-of-the-app) ||
+[7. Optional content](#section-adding-optional-content-with-a-check-box) ||
+
+Here, we add some R code inside the `renderPlot` function that plots the normal density.  X-values from -12 to 22 allow 3 standard deviations of the normal distribution to be plotted at each mean value.  The function `dnorm` calculates the height of the normal density at each x value.  It takes the current mean and standard deviation values from the sliders using `input$mu` and `input$sigma`.  Note that the input ID's `mu` and `sigma` are matched from the `sliderInput` functions.
+
+<pre>
+library(shiny)
+ui <- fluidPage(
+  wellPanel(h2('Title')),
+  fluidRow(
+    column(4, wellPanel(
+      sliderInput(inputId='mu', label='Mean', min=0, max=10, value=3, step=.1),
+      sliderInput(inputId='sigma', label='Standard Deviation', min=1, 4, value=2, step=.1)
+    )),
+    column(8, wellPanel(
+      plotOutput(outputId='normaldist')
+    ))
+  )
+)
+
+server <- function(input, output) {
+  output$normaldist <- renderPlot({
+    <b><span style='color:blue'>x <- seq(from=-12, to=22, by=.1)
+    y <- dnorm(x, mean=input$mu, sd=input$sigma)
+    plot(x,y, type='l')</b></span>
+  })
+}
+
+shinyApp(ui = ui, server = server)
+</pre>
+
+```{r, echo=F}
+library(shiny)
+ui <- fluidPage(
+  wellPanel(h2('Title')),
+  fluidRow(
+    column(4, wellPanel(
+      sliderInput(inputId='mu', label='Mean', min=0, max=10, value=3, step=.1),
+      sliderInput(inputId='sigma', label='Standard Deviation', min=1, 4, value=2, step=.1)
+    )),
+    column(8, wellPanel(
+      plotOutput(outputId='normaldist')
+    ))
+  )
+)
+
+server <- function(input, output) {
+  output$normaldist <- renderPlot({
+    x <- seq(from=-12, to=22, by=.1)
+    y <- dnorm(x, mean=input$mu, sd=input$sigma)
+    plot(x,y, type='l')
+  })
+}
+
+shinyApp(ui = ui, server = server, options=list(height=590))
+```
+
+-------------------
+
+## Refining the Appearance of the App 
+
+|| [Top](#section-introduction) || [1. Template](#section-the-template) || [2. Layout](#section-a-sample-layout) || [3. Sliders](#section-add-sliders-for-the-mean-and-standard-deviation) ||
+[4. Space for Plot](#section-add-space-for-the-plot) || [5. Reactive plot](#section-add-normal-curve) || [6. Refining](#section-refining-the-appearance-of-the-app) ||
+[7. Optional content](#section-adding-optional-content-with-a-check-box) ||
+
+To better show how changing the standard deviation affects the height of the normal density, we should fix the y limits of the plot.  If we don't, the y limits will reactively change instead of the height of the curve.  I have also added a title and subtitle for the app, a title for the plot, and a label for the y-axis.
+
+<pre>
+library(shiny)
+ui <- fluidPage(
+  wellPanel(<b><span style='color:blue'>h2('The Normal Density'),
+            'The effect of the mean and standard deviation'
+  ),</b></span>
+  fluidRow(
+    column(4, wellPanel(
+      sliderInput(inputId='mu', label='Mean', min=0, max=10, value=3, step=.1),
+      sliderInput(inputId='sigma', label='Standard Deviation', min=1, 4, value=2, step=.1)
+    )),
+    column(8, wellPanel(
+      plotOutput(outputId='normaldist')
+    ))
+  )
+)
+
+server <- function(input, output) {
+  output$normaldist <- renderPlot({
+    x <- seq(from=-12, to=22, by=.1)
+    y <- dnorm(x, mean=input$mu, sd=input$sigma)
+    plot(x,y, type='l', <b><span style='color:blue'>ylim=c(0, .4), ylab='Density', main='Plot of normal density')</b></span>
+  })
+}
+shinyApp(ui = ui, server = server)
+</pre>
+
+```{r, echo=F}
+ui <- fluidPage(
+  wellPanel(h2('The Normal Density'),
+            'The effect of the mean and the standard deviation'),
+  fluidRow(
+    column(4, wellPanel(
+      sliderInput(inputId='mu', label='Mean', min=0, max=10, value=3, step=.1),
+      sliderInput(inputId='sigma', label='Standard Deviation', min=1, 4, value=2, step=.1)
+    )),
+    column(8, wellPanel(
+      plotOutput(outputId='normaldist')
+    ))
+  )
+)
+
+server <- function(input, output) {
+  output$normaldist <- renderPlot({
+    x <- seq(from=-12, to=22, by=.1)
+    y <- dnorm(x, mean=input$mu, sd=input$sigma)
+    plot(x,y, type='l', ylim=c(0, .4),
+         ylab='Density', main='Plot of normal density')
+  })
+}
+shinyApp(ui = ui, server = server, options=list(height=590))
+```
+
+-----------------
+
+## Adding Optional Content with a Check Box
+
+|| [Top](#section-introduction) || [1. Template](#section-the-template) || [2. Layout](#section-a-sample-layout) || [3. Sliders](#section-add-sliders-for-the-mean-and-standard-deviation) ||
+[4. Space for Plot](#section-add-space-for-the-plot) || [5. Reactive plot](#section-add-normal-curve) || [6. Refining](#section-refining-the-appearance-of-the-app) ||
+[7. Optional content](#section-adding-optional-content-with-a-check-box) ||
+
+For the icing on the cake, let's add line segments that are 1, 2, and 3 standard deviations away from the mean.  We can let the user choose whether to display these lines using a check box that we put below the sliders.
+
+<pre>
+library(shiny)
+ui <- fluidPage(
+  wellPanel(h2('The Normal Density'),
+            'The effect of the mean and the standard deviation'),
+  fluidRow(
+    column(4, wellPanel(
+      sliderInput('mu', label='Mean', min=0, max=10, value=3, step=.1),
+      sliderInput('sigma', label='Standard Deviation', min=1, 4, value=2, step=.1),
+      <b><span style='color:blue'>checkboxInput('emp', label='Show the Empirical Rule', value=TRUE)</b></span>
+    )),
+    column(8, wellPanel(
+      plotOutput('normaldist')
+    ))
+  )
+)
+
+server <- function(input, output) {
+  output$normaldist <- renderPlot({
+    x <- seq(from=-12, to=22, by=.1)
+    y <- dnorm(x, mean=input$mu, sd=input$sigma)
+    plot(x,y, type='l', ylim=c(0, .4),
+         ylab='Density', main='Plot of normal density')
+    <b><span style='color:blue'>if(input$emp == TRUE){
+      segments(x0=input$mu+c(-1,1)*input$sigma, y0=0,
+               y1=dnorm(input$mu+c(-1,1)*input$sigma, mean=input$mu, sd=input$sigma),
+               col='red')
+      segments(x0=input$mu+c(-2,2)*input$sigma, y0=0,
+               y1=dnorm(input$mu+c(-2,2)*input$sigma, mean=input$mu, sd=input$sigma),
+               col='green')
+      segments(x0=input$mu+c(-3,3)*input$sigma, y0=0,
+               y1=dnorm(input$mu+c(-3,3)*input$sigma, mean=input$mu, sd=input$sigma),
+               col='blue')
+      legend('topright', title='# sd\'s (%)',
+             legend=c('1  (68%)', '2  (95%)', '3  (99.7%)'), lty=1, col=c('red', 'green', 'blue'))
+    }</b></span>
+  })
+}
+
+shinyApp(ui = ui, server = server)
+</pre>
+
+```{r, echo=F}
+library(shiny)
+ui <- fluidPage(
+  wellPanel(h2('The Normal Density'),
+            'The effect of the mean and the standard deviation'),
+  fluidRow(
+    column(4, wellPanel(
+      sliderInput('mu', label='Mean', min=0, max=10, value=3, step=.1),
+      sliderInput('sigma', label='Standard Deviation', min=1, 4, value=2, step=.1),
+      checkboxInput('emp', label='Show the Empirical Rule', value=TRUE)
+    )),
+    column(8, wellPanel(
+      plotOutput('normaldist')
+    ))
+  )
+)
+
+server <- function(input, output) {
+  output$normaldist <- renderPlot({
+    x <- seq(from=-12, to=22, by=.1)
+    y <- dnorm(x, mean=input$mu, sd=input$sigma)
+    plot(x,y, type='l', ylim=c(0, .4),
+         ylab='Density', main='Plot of normal density')
+    if(input$emp == TRUE){
+      segments(x0=input$mu+c(-1,1)*input$sigma, y0=0,
+               y1=dnorm(input$mu+c(-1,1)*input$sigma, mean=input$mu, sd=input$sigma),
+               col='red')
+      segments(x0=input$mu+c(-2,2)*input$sigma, y0=0,
+               y1=dnorm(input$mu+c(-2,2)*input$sigma, mean=input$mu, sd=input$sigma),
+               col='green')
+      segments(x0=input$mu+c(-3,3)*input$sigma, y0=0,
+               y1=dnorm(input$mu+c(-3,3)*input$sigma, mean=input$mu, sd=input$sigma),
+               col='blue')
+      legend('topright', title='# sd\'s (%)',
+             legend=c('1  (68%)', '2  (95%)', '3  (99.7%)'), lty=1, col=c('red', 'green', 'blue'))
+    }
+  })
+}
+
+shinyApp(ui = ui, server = server, options=list(height=600))
+```
+
+On the UI side, the check box is included using the `checkboxInput` function.  It creates the true/false variable `input$emp` which is initially set to true and the `value=TRUE` argument.
+
+On the server side, the `segments` and `legend` functions that create the lines and the lengend are wrapped within an `if` statement so they are only added to the plot if the check box is checked.  (Try checking the box!)
+
+---
+
+To finish up, you can deploy your Shiny app using [shinyapps.io](http://www.shinyapps.io/) or [Shiny server](https://www.rstudio.com/products/shiny/shiny-server/).  Have fun!
