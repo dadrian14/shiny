@@ -19,17 +19,17 @@ shinyServer(function(input, output, session) {
         tags$div('The options in this panel specify the type of problem that is answered',
                  tags$ol(
                    conditionalPanel('input.problem_type=="1"', 
-                          tags$li(no1.txt),
-                          tags$li('What type of range of z are we taking: a range between z values, 
-                                  the range greater than a z value, or the range less than a z value?'), 
-                          tags$li('What is/are the value(s) of z that defines the range?')
+                          tags$li(withMathJax(no1.txt)),
+                          tags$li('What type of range of \\(z\\) are we taking: a range between \\(z\\) values, 
+                                  the range greater than a \\(z\\) value, or the range less than a \\(z\\) value?'), 
+                          tags$li('What is/are the value(s) of \\(z\\) that defines the range?')
                    ), 
                    conditionalPanel('input.problem_type=="2"', 
                           tags$li(no1.txt),
-                          tags$li('For what type of range of z are we trying to find the probability: the 
-                                  range between -z and +z (a certain number of z units away from 0), 
-                                  the range greater than z, or the range less than z?'), 
-                          tags$li('For which probability should we find this range of z?')
+                          tags$li('For what type of range of \\(z\\) are we trying to find the probability: the 
+                                  range between \\(-z\\) and \\(+z\\) (a certain number of \\(z\\) units away from 0), 
+                                  the range greater than \\(z\\), or the range less than \\(z\\)?'), 
+                          tags$li('For which probability should we find this range of \\(z\\)?')
                                     ), 
                    'Finally, a summary of the problem is given at the bottom.'
                  ),
@@ -38,17 +38,17 @@ shinyServer(function(input, output, session) {
       column(7, wellPanel(
         tags$div('This panel gives a picture of the problem.  Note that the probability 
                  is the shaded area under the normal curve (out of the total area of 1) 
-                 and z values correspond to values on the x-axis.  Last, the answer to the 
-                 problem (either z value or probability) is given at the bottom.', 
+                 and \\(z\\) values correspond to values on the \\(x\\)-axis.  Last, the answer to the 
+                 problem (either \\(z\\) value or probability) is given at the bottom.', 
                  style='font-size: x-small;')
       ))
       , style="margin: 0px -20px;") 
   )})
   observeEvent(input$range_type, {
     if(input$range_type==2)
-      updateSliderInput(session, 'z', label='3. Greater than which z?')
+      updateSliderInput(session, 'z', min=-4, max=4, label='3. Greater than which z?')
     if(input$range_type==3)
-      updateSliderInput(session, 'z', label='3. Less than which z?')
+      updateSliderInput(session, 'z', min=-4, max=4, label='3. Less than which z?')
   })
   output$summary_prob <- renderUI({
     if(input$problem_type==1){
